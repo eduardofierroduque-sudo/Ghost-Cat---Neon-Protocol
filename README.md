@@ -1,6 +1,8 @@
 Ghost Cat - Neon Protocol
+
 jugar aquí: https://eduardofierroduque-sudo.github.io/Ghost-Cat---Neon-Protocol/
 Controles (flechas dirección, barra espacio saltar, disparo dirección-mouse)
+
 <img width="1896" height="879" alt="image" src="https://github.com/user-attachments/assets/27de3b15-26af-4940-adbb-d4e1a61b20ae" />
 
 
