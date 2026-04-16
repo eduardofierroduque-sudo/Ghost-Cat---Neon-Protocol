@@ -34,8 +34,8 @@ Disparar: Clic Izquierdo del mouse.
 
 Controles Móviles (⚠️ En Desarrollo):
 Actualmente el juego cuenta con un HUD táctil, pero la experiencia FPS con ratón no ha sido optimizada para dispositivos móviles aún. ¡Se recomienda jugar en PC para la mejor experiencia!
-    
-<img width="1904" height="870" alt="image" src="https://github.com/user-attachments/assets/20f118ce-9b5f-4adf-80b1-69f42c4e9433" />
+    ![Uploading Ghost Cat - Neon Protocol_by_eduardofierroduque2.gif…]()
+
 
 
 ## Requisitos
