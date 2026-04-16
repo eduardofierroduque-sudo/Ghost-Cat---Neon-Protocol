@@ -43,6 +43,7 @@ Para ejecutar el juego localmente:
 
 
 ## Hoja de ruta (Próximas mejoras)
+- Implementacion mouse en la jugabilidad.
 - Implementación de diferentes tipos de armas.
 - Generación procedimental de laberintos.
 - Tabla de puntuaciones máximas (High Scores).
