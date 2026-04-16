@@ -1,6 +1,6 @@
 Ghost Cat - Neon Protocol
 jugar aquí: https://eduardofierroduque-sudo.github.io/Ghost-Cat---Neon-Protocol/
-Controles (flechas dirección barra espacio disparo)
+Controles (flechas dirección, barra espacio saltar, disparo dirección-mouse)
 <img width="1896" height="879" alt="image" src="https://github.com/user-attachments/assets/27de3b15-26af-4940-adbb-d4e1a61b20ae" />
 
 
@@ -15,14 +15,23 @@ En Ghost Cat, el jugador debe navegar a través de laberintos digitales eliminan
 ## Estado del Proyecto: v1.0 (Primera Versión)
 Esta es la versión inicial del proyecto, enfocada en la implementación de la lógica básica de movimiento, detección de colisiones 3D y sistema de combate.
 
-## Características principales
-- **Motor 3D:** Renderizado en tiempo real utilizando Three.js.
-- **Estética Visual:** Uso de niebla (fog), iluminación dinámica y texturas de rejilla neón.
-- **Sistema de Niveles:** Actualmente cuenta con 2 niveles iniciales:
-  - **Nivel 1: Cripta Celeste:** Un entorno cian con dificultad moderada.
-  - **Nivel 2: Laberinto Rosa:** Un mapa más extenso con enemigos más rápidos y variados.
-- **Control Multiplataforma:** - **PC:** Movimiento con flechas/WASD y disparo con Barra Espaciadora.
-  - **Móvil:** Controles táctiles integrados en pantalla.(en proceso de prueba por que funcionan remal ajjaja por el momento)
+El sistema ha sido actualizado recientemente para ofrecer una experiencia FPS clásica y fluida.
+
+[!IMPORTANT]
+
+Nota sobre el control: Al entrar al juego, haz clic en la pantalla para bloquear el puntero del ratón y activar el control total de la cámara.
+
+Controles de PC:
+Movimiento: Teclas W, A, S, D o Flechas de dirección.
+
+Mirar: Mueve el Mouse para girar la cámara 360°.
+
+Saltar: Tecla Espacio.
+
+Disparar: Clic Izquierdo del mouse.
+
+Controles Móviles (⚠️ En Desarrollo):
+Actualmente el juego cuenta con un HUD táctil, pero la experiencia FPS con ratón no ha sido optimizada para dispositivos móviles aún. ¡Se recomienda jugar en PC para la mejor experiencia!
     
 <img width="1904" height="870" alt="image" src="https://github.com/user-attachments/assets/20f118ce-9b5f-4adf-80b1-69f42c4e9433" />
 
@@ -42,10 +51,32 @@ Para ejecutar el juego localmente:
 
 
 
-## Hoja de ruta (Próximas mejoras)
-- Implementacion mouse en la jugabilidad.
-- Implementación de diferentes tipos de armas.
-- Generación procedimental de laberintos.
-- Tabla de puntuaciones máximas (High Scores).
+Esta actualización marca un hito en la jugabilidad del protocolo:
+Pointer Lock API: Implementación de control por ratón para una puntería precisa.
+Física de Salto: Ahora el "Ghost Cat" puede saltar obstáculos y ataques gracias a un nuevo sistema de gravedad y velocidad vertical.
+Colisiones de Deslizamiento (Sliding Physics): Se corrigieron los errores donde el personaje se trababa en los muros. Ahora puedes "deslizarte" por las paredes para un movimiento más fluido en combate.
+Disparo Centrado: Los proyectiles ahora siguen la dirección exacta de la cámara (Raycast visual).
+
+Características del Proyecto
+Motor 3D: Renderizado de alto rendimiento con Three.js.
+Estética Visual: Uso de niebla volumétrica, iluminación dinámica y texturas de rejilla neón.
+
+Sistema de Niveles:
+Nivel 1: Cripta Celeste: Entorno cian, ideal para aprender las mecánicas.
+Nivel 2: Laberinto Rosa: Mapa extenso con enemigos más agresivos y rápidos.
+
+Hoja de Ruta (Próximas Mejoras)
+[ ] Optimización Móvil: Adaptar el control de cámara para pantallas táctiles (Gyro/Joystick).
+[ ] Armamento: Implementación de diferentes tipos de armas (láser, ráfaga).
+[ ] Laberintos Procedimentales: Generación de mapas aleatorios en cada partida.
+[ ] Sistema de Score: Tabla de puntuaciones máximas (High Scores) integrada.
+
+No requiere instalación. Solo necesitas un navegador moderno (Chrome, Firefox, Edge o Safari) con soporte para WebGL.
+Implementación Local
+Descarga el archivo index.html.
+
+Ejecútalo en tu navegador o mediante un servidor local (como Live Server de VS Code) para evitar restricciones de carga de módulos.
+
+
 
 Atte Eduardo Fierro Duque 
