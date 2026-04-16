@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ghost Cat - Neon Protocol Fixed</title>
+    <style>
+        body { margin: 0; background-color: #000; color: #0ff; font-family: 'Courier New', monospace; overflow: hidden; touch-action: none; }
+        #game-container { position: relative; width: 100vw; height: 100vh; background-color: #000; }
+        canvas { width: 100%; height: 100%; display: block; }
+        
+        #ui-overlay { position: absolute; top: 10px; left: 10px; z-index: 10; width: 95%; pointer-events: none; }
+        #mission-title { color: #0ff; font-size: 1.1em; font-weight: bold; text-shadow: 0 0 10px #0ff; }
+        #level-indicator { color: #ff00ff; font-weight: bold; }
+        #health-container { width: 200px; height: 10px; border: 1px solid #0ff; background: #011; margin-top: 5px; box-shadow: 0 0 10px #0ff; }
+        #health-bar { width: 100%; height: 100%; background: #0ff; transition: width 0.2s; }
+        
+        #crosshair { 
+            position: absolute; top: 50%; left: 50%; width: 24px; height: 24px; 
+            border: 2px solid #0ff; border-radius: 50%; transform: translate(-50%, -50%); 
+            pointer-events: none; z-index: 100; opacity: 0.7;
+        }
+
+        #blood-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 255, 255, 0.3); display: none; pointer-events: none; z-index: 15; }
+        
+        .mobile-controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; z-index: 10; }
+        .btn { width: 70px; height: 70px; background: rgba(0, 255, 255, 0.1); border: 1px solid #0ff; border-radius: 50%; color: #0ff; display: flex; justify-content: center; align-items: center; font-size: 24px; }
+        #attack-btn { position: absolute; bottom: 30px; right: 30px; width: 90px; height: 90px; background: rgba(0, 255, 255, 0.2); border: 2px solid #0ff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; z-index: 10; color: #0ff; box-shadow: 0 0 15px #0ff; }
+        
+        #weapon { position: absolute; bottom: -10px; right: 15%; font-size: 100px; pointer-events: none; transform: rotateY(180deg); z-index: 5; filter: drop-shadow(0 0 10px #0ff); }
+        
+        @media (min-width: 800px) { .mobile-controls { display: none; } }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="crosshair"></div>
+    <div id="blood-overlay"></div>
+    
+    <div id="ui-overlay">
+        <div id="mission-title">NIVEL: <span id="level-num">1</span> | <span id="level-indicator">CRIPTA CELESTE</span></div>
+        <div style="font-size: 0.9em;">TIEMPO: <span id="timer">60</span>s | KILLS: <span id="kills-count">0</span></div>
+        <div id="health-container"><div id="health-bar"></div></div>
+    </div>
+
+    <canvas id="mazeCanvas"></canvas>
+    <div id="weapon">🔫</div>
+
+    <audio id="bgMusic" loop>
+        <source src="https://www.chosic.com/wp-content/uploads/2021/07/The-Dark-Piano.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="mobile-controls">
+        <div></div><div class="btn" id="up">↑</div><div></div>
+        <div class="btn" id="left">←</div><div class="btn" id="down">↓</div><div class="btn" id="right">→</div>
+    </div>
+    <div id="attack-btn">PUM!</div>
+</div>
+
+<script type="module">
+    import * as THREE from 'https://cdn.skypack.dev/three@0.132.2';
+
+    let scene, camera, renderer, flashLight;
+    let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+    let ghosts = [], walls = [], bullets = [], explosions = [];
+    let playerHealth = 100, kills = 0, timeLeft = 60, currentLevel = 1;
+    let lastDamageTime = 0, gameActive = true, isInvulnerable = false;
+    let texNormal, texAngry, texHappy;
+
+    const UNIT_SIZE = 5;
+    const COLLISION_MARGIN = 1.2; // Evita que la cámara toque las paredes
+
+    const map1 = [
+        [1,1,1,1,1,1,1,1,1,1], [1,0,0,0,1,0,0,0,0,1], [1,0,1,0,0,0,1,1,0,1],
+        [1,0,1,1,1,0,0,0,0,1], [1,0,0,0,1,1,1,0,1,1], [1,1,1,0,0,0,0,0,0,1],
+        [1,0,0,0,1,1,1,1,0,1], [1,0,1,0,0,0,0,0,0,1], [1,0,0,0,1,1,0,1,0,1], [1,1,1,1,1,1,1,1,1,1]
+    ];
+
+    const map2 = [
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
+        [1,0,1,1,1,0,1,0,1,1,1,1,1,0,1], [1,0,1,0,0,0,0,0,1,0,0,0,1,0,1],
+        [1,0,1,0,1,1,1,1,1,0,1,0,1,0,1], [1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
+        [1,1,1,0,1,0,1,1,1,0,1,1,1,0,1], [1,0,0,0,0,0,1,0,1,0,0,0,0,0,1],
+        [1,0,1,1,1,1,1,0,1,1,1,1,1,1,1], [1,0,0,0,1,0,0,0,0,0,0,0,1,0,1],
+        [1,1,1,0,1,0,1,1,1,1,1,0,1,0,1], [1,0,0,0,0,0,1,0,0,0,1,0,0,0,1],
+        [1,0,1,1,1,1,1,0,1,0,1,1,1,1,1], [1,0,0,0,0,0,0,0,1,0,0,0,0,0,1], [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ];
+
+    function createGridTexture(bgColor, gridColor) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 128; canvas.height = 128;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = bgColor; ctx.fillRect(0, 0, 128, 128);
+        ctx.strokeStyle = gridColor; ctx.lineWidth = 2;
+        ctx.strokeRect(0,0,128,128);
+        ctx.beginPath(); ctx.moveTo(0,64); ctx.lineTo(128,64); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(64,0); ctx.lineTo(64,128); ctx.stroke();
+        return new THREE.CanvasTexture(canvas);
+    }
+
+    function generateFace(base, eyes, type) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 64; canvas.height = 64;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = base; ctx.fillRect(0,0,64,64);
+        ctx.fillStyle = eyes; ctx.fillRect(14,20,10,10); ctx.fillRect(40,20,10,10);
+        ctx.fillStyle = "#000";
+        if(type === 'happy') { ctx.fillRect(22,45,20,4); ctx.fillRect(20,41,4,4); ctx.fillRect(40,41,4,4); }
+        else if(type === 'angry') { ctx.fillRect(24,48,16,4); }
+        else { ctx.fillRect(22,48,4,4); ctx.fillRect(38,48,4,4); ctx.fillRect(26,52,12,4); }
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.magFilter = THREE.NearestFilter;
+        return tex;
+    }
+
+    function init() {
+        scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x000000, 0.15);
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.4, 1000); // Near plane ajustado
+        
+        renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('mazeCanvas'), antialias: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        flashLight = new THREE.PointLight(0x00ffff, 1.2, 25);
+        camera.add(flashLight);
+        scene.add(camera);
+
+        texNormal = generateFace("#FFF", "#0FF", 'normal');
+        texAngry = generateFace("#FFF", "#F00", 'angry');
+        texHappy = generateFace("#FF0", "#F0F", 'happy');
+
+        loadLevel(1);
+        setupControls();
+        animate();
+    }
+
+    function loadLevel(num) {
+        walls.forEach(w => scene.remove(w));
+        ghosts.forEach(g => scene.remove(g));
+        walls = []; ghosts = [];
+        currentLevel = num;
+        let activeMap = (num === 1) ? map1 : map2;
+        let mainColor = (num === 1) ? "#00ffff" : "#ff00ff";
+        
+        document.getElementById('level-num').innerText = num;
+        document.getElementById('level-indicator').innerText = (num === 1) ? "CRIPTA CELESTE" : "LABERINTO ROSA";
+        document.getElementById('level-indicator').style.color = mainColor;
+        flashLight.color.setHex(num === 1 ? 0x00ffff : 0xff00ff);
+
+        const wallTex = createGridTexture(num === 1 ? "#000" : "#050005", mainColor);
+        const wallMat = new THREE.MeshStandardMaterial({ map: wallTex, emissive: mainColor, emissiveIntensity: 0.2 });
+        const wallGeo = new THREE.BoxGeometry(UNIT_SIZE, UNIT_SIZE, UNIT_SIZE);
+
+        for (let i = 0; i < activeMap.length; i++) {
+            for (let j = 0; j < activeMap[i].length; j++) {
+                if (activeMap[i][j] === 1) {
+                    const wall = new THREE.Mesh(wallGeo, wallMat);
+                    wall.position.set(i * UNIT_SIZE, UNIT_SIZE/2, j * UNIT_SIZE);
+                    scene.add(wall); walls.push(wall);
+                }
+            }
+        }
+        camera.position.set(UNIT_SIZE, 2, UNIT_SIZE);
+        for (let i = 0; i < (num === 1 ? 7 : 12); i++) spawnGhost();
+        timeLeft = 60;
+    }
+
+    function spawnGhost() {
+        const isHappy = currentLevel === 2 && Math.random() > 0.5;
+        const size = isHappy ? 1.0 : 1.7;
+        const geo = new THREE.BoxGeometry(size, size*1.2, size);
+        const mat = new THREE.MeshStandardMaterial({ map: isHappy ? texHappy : texNormal, emissive: isHappy ? "#ff0" : "#0ff", emissiveIntensity: 0.4 });
+        const g = new THREE.Mesh(geo, mat);
+        let rx, rz, activeMap = (currentLevel === 1) ? map1 : map2;
+        do { rx = Math.floor(Math.random() * activeMap.length); rz = Math.floor(Math.random() * activeMap[0].length); } 
+        while (activeMap[rx][rz] !== 0 || (rx*UNIT_SIZE === camera.position.x));
+        g.position.set(rx * UNIT_SIZE, size/2 + 0.5, rz * UNIT_SIZE);
+        g.userData = { health: isHappy ? 1 : 2, type: isHappy ? 'happy' : 'normal', speed: isHappy ? 0.07 : 0.04 };
+        scene.add(g); ghosts.push(g);
+    }
+
+    function takeDamage() {
+        if (!gameActive || isInvulnerable) return;
+        playerHealth -= 20;
+        isInvulnerable = true;
+        document.getElementById('blood-overlay').style.display = 'block';
+        document.getElementById('health-bar').style.width = playerHealth + "%";
+        
+        setTimeout(() => { 
+            document.getElementById('blood-overlay').style.display = 'none';
+            isInvulnerable = false;
+        }, 500);
+
+        if (playerHealth <= 0) {
+            gameActive = false;
+            alert("SISTEMA COLAPSADO - REINICIANDO...");
+            location.reload();
+        }
+    }
+
+    function animate() {
+        if (!gameActive) return;
+        requestAnimationFrame(animate);
+
+        const speed = 0.2, rotSpeed = 0.05;
+        if (moveLeft) camera.rotation.y += rotSpeed;
+        if (moveRight) camera.rotation.y -= rotSpeed;
+        if (moveForward || moveBackward) {
+            const dir = new THREE.Vector3(); camera.getWorldDirection(dir);
+            const m = moveForward ? 1 : -1;
+            const nX = camera.position.x + dir.x * speed * m;
+            const nZ = camera.position.z + dir.z * speed * m;
+            if (!checkCol(nX, camera.position.z)) camera.position.x = nX;
+            if (!checkCol(camera.position.x, nZ)) camera.position.z = nZ;
+        }
+
+        // Balas
+        for (let i = bullets.length - 1; i >= 0; i--) {
+            const b = bullets[i];
+            b.mesh.position.add(b.dir.clone().multiplyScalar(0.8));
+            b.life--;
+            let hit = false;
+            ghosts.forEach((g, idx) => {
+                if (b.mesh.position.distanceTo(g.position) < 1.5) {
+                    g.userData.health--;
+                    if (g.userData.health <= 0) {
+                        createExplosion(g.position, g.userData.type === 'happy' ? 0xffff00 : 0x00ffff);
+                        scene.remove(g); ghosts.splice(idx, 1);
+                        kills++; spawnGhost();
+                        document.getElementById('kills-count').innerText = kills;
+                    }
+                    hit = true;
+                }
+            });
+            if (hit || b.life <= 0 || checkCol(b.mesh.position.x, b.mesh.position.z)) {
+                scene.remove(b.mesh); bullets.splice(i, 1);
+            }
+        }
+
+        // Enemigos y Explosiones
+        explosions.forEach((e, i) => {
+            e.mesh.position.add(e.vel); e.life -= 0.04;
+            e.mesh.material.opacity = e.life;
+            if(e.life <= 0) { scene.remove(e.mesh); explosions.splice(i,1); }
+        });
+
+        ghosts.forEach(g => {
+            const d = g.position.distanceTo(camera.position);
+            g.lookAt(camera.position);
+            if (d < 18) {
+                const f = new THREE.Vector3().subVectors(camera.position, g.position).normalize();
+                g.position.x += f.x * g.userData.speed; g.position.z += f.z * g.userData.speed;
+                g.position.y = (g.userData.type === 'happy' ? 1 : 1.2) + Math.sin(Date.now()*0.005)*0.2;
+            }
+            if (d < 2.0) takeDamage();
+        });
+
+        renderer.render(scene, camera);
+    }
+
+    function checkCol(x, z) {
+        for(let w of walls) {
+            if (Math.abs(x - w.position.x) < COLLISION_MARGIN + 2 && Math.abs(z - w.position.z) < COLLISION_MARGIN + 2) return true;
+        }
+        return false;
+    }
+
+    function createExplosion(pos, col) {
+        const flash = new THREE.PointLight(col, 6, 12); flash.position.copy(pos);
+        scene.add(flash); setTimeout(() => scene.remove(flash), 100);
+        for (let i = 0; i < 10; i++) {
+            const p = new THREE.Mesh(new THREE.BoxGeometry(0.3,0.3,0.3), new THREE.MeshBasicMaterial({color: col, transparent: true}));
+            p.position.copy(pos);
+            const vel = new THREE.Vector3((Math.random()-0.5)*0.4, (Math.random()-0.5)*0.4, (Math.random()-0.5)*0.4);
+            scene.add(p); explosions.push({ mesh: p, vel: vel, life: 1.0 });
+        }
+    }
+
+    function createBullet() {
+        const b = new THREE.Mesh(new THREE.SphereGeometry(0.2), new THREE.MeshBasicMaterial({color: 0x00ff00}));
+        b.position.copy(camera.position);
+        const dir = new THREE.Vector3(); camera.getWorldDirection(dir);
+        b.add(new THREE.PointLight(0x00ff00, 2, 8));
+        scene.add(b); bullets.push({ mesh: b, dir: dir, life: 60 });
+        const w = document.getElementById('weapon');
+        w.style.transform = "rotateY(180deg) scale(0.7) translateY(10px)";
+        setTimeout(() => w.style.transform = "rotateY(180deg) scale(1)", 60);
+    }
+
+    function setupControls() {
+        const music = document.getElementById('bgMusic');
+        const playMusic = () => music.play().catch(()=>{});
+        window.onkeydown = (e) => {
+            playMusic();
+            if(e.code === 'KeyW' || e.code === 'ArrowUp') moveForward = true;
+            if(e.code === 'KeyS' || e.code === 'ArrowDown') moveBackward = true;
+            if(e.code === 'KeyA' || e.code === 'ArrowLeft') moveLeft = true;
+            if(e.code === 'KeyD' || e.code === 'ArrowRight') moveRight = true;
+            if(e.code === 'Space') createBullet();
+        };
+        window.onkeyup = (e) => {
+            if(e.code === 'KeyW' || e.code === 'ArrowUp') moveForward = false;
+            if(e.code === 'KeyS' || e.code === 'ArrowDown') moveBackward = false;
+            if(e.code === 'KeyA' || e.code === 'ArrowLeft') moveLeft = false;
+            if(e.code === 'KeyD' || e.code === 'ArrowRight') moveRight = false;
+        };
+        const bind = (id, fn) => {
+            const el = document.getElementById(id);
+            el.ontouchstart = (e) => { e.preventDefault(); playMusic(); fn(true); };
+            el.ontouchend = (e) => { e.preventDefault(); fn(false); };
+        };
+        bind('up', v => moveForward = v); bind('down', v => moveBackward = v);
+        bind('left', v => moveLeft = v); bind('right', v => moveRight = v);
+        document.getElementById('attack-btn').ontouchstart = (e) => { e.preventDefault(); createBullet(); };
+        
+        setInterval(() => { 
+            if (gameActive) {
+                timeLeft--; document.getElementById('timer').innerText = timeLeft;
+                if(timeLeft <= 0) {
+                    if(currentLevel === 1) { alert("¡ETAPA 1 COMPLETADA!"); loadLevel(2); } 
+                    else { gameActive = false; alert("SISTEMA DEPURADO - KILLS: " + kills); location.reload(); }
+                }
+            }
+        }, 1000);
+    }
+    window.onload = init;
+</script>
+</body>
+</html>
