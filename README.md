@@ -22,7 +22,7 @@ Esta es la versión inicial del proyecto, enfocada en la implementación de la l
   - **Nivel 1: Cripta Celeste:** Un entorno cian con dificultad moderada.
   - **Nivel 2: Laberinto Rosa:** Un mapa más extenso con enemigos más rápidos y variados.
 - **Control Multiplataforma:** - **PC:** Movimiento con flechas/WASD y disparo con Barra Espaciadora.
-  - **Móvil:** Controles táctiles integrados en pantalla.(en proceso de prueba)
+  - **Móvil:** Controles táctiles integrados en pantalla.(en proceso de prueba por que funcionan remal ajjaja por el momento)
     
 <img width="1904" height="870" alt="image" src="https://github.com/user-attachments/assets/20f118ce-9b5f-4adf-80b1-69f42c4e9433" />
 
@@ -34,7 +34,7 @@ No requiere instalación. Solo necesitas un navegador moderno (Chrome, Firefox, 
 Para ejecutar el juego localmente:
 1. Descarga el archivo `index.html`. o bien visita la pagina que me da github: https://eduardofierroduque-sudo.github.io/Ghost-Cat---Neon-Protocol/
 2. Ábrelo en tu navegador de preferencia.
-3. Haz clic en cualquier tecla para iniciar la música y el sistema de combate.
+
 
 
    <img width="1912" height="854" alt="image" src="https://github.com/user-attachments/assets/fe98ef59-48f5-4993-9227-34fd6228c2c5" />
