@@ -29,6 +29,8 @@ Mirar: Mueve el Mouse para girar la cámara 360°.
 Saltar: Tecla Espacio.
 
 Disparar: Clic Izquierdo del mouse.
+<img width="853" height="480" alt="Ghost Cat - Neon Protocol_by_eduardofierroduque" src="https://github.com/user-attachments/assets/b65c07dd-0e65-465e-870c-ed8e7e2b9274" />
+
 
 Controles Móviles (⚠️ En Desarrollo):
 Actualmente el juego cuenta con un HUD táctil, pero la experiencia FPS con ratón no ha sido optimizada para dispositivos móviles aún. ¡Se recomienda jugar en PC para la mejor experiencia!
