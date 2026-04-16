@@ -1,12 +1,16 @@
 Ghost Cat - Neon Protocol
 jugar aquí: https://eduardofierroduque-sudo.github.io/Ghost-Cat---Neon-Protocol/
 Controles (flechas dirección barra espacio disparo)
+<img width="1896" height="879" alt="image" src="https://github.com/user-attachments/assets/27de3b15-26af-4940-adbb-d4e1a61b20ae" />
 
 
 Ghost Cat es un shooter de supervivencia en primera persona (FPS) con una estética Cyberpunk/Retro-Neon, desarrollado íntegramente para ejecutarse en el navegador.
 
 ## Sobre el juego
 En Ghost Cat, el jugador debe navegar a través de laberintos digitales eliminando amenazas de red (fantasmas) mientras el tiempo corre. El objetivo es sobrevivir a los protocolos de seguridad y limpiar los niveles de interferencias.
+
+<img width="1903" height="856" alt="image" src="https://github.com/user-attachments/assets/2740e0ad-62b2-401b-8028-848ed4d8fb82" />
+
 
 ## Estado del Proyecto: v1.0 (Primera Versión)
 Esta es la versión inicial del proyecto, enfocada en la implementación de la lógica básica de movimiento, detección de colisiones 3D y sistema de combate.
@@ -18,8 +22,9 @@ Esta es la versión inicial del proyecto, enfocada en la implementación de la l
   - **Nivel 1: Cripta Celeste:** Un entorno cian con dificultad moderada.
   - **Nivel 2: Laberinto Rosa:** Un mapa más extenso con enemigos más rápidos y variados.
 - **Control Multiplataforma:** - **PC:** Movimiento con flechas/WASD y disparo con Barra Espaciadora.
-  - **Móvil:** Controles táctiles integrados en pantalla.
-- **Audio Atmosférico:** Música de fondo integrada que se activa con la interacción del usuario.
+  - **Móvil:** Controles táctiles integrados en pantalla.(en proceso de prueba)
+    
+<img width="1904" height="870" alt="image" src="https://github.com/user-attachments/assets/20f118ce-9b5f-4adf-80b1-69f42c4e9433" />
 
 ## Requisitos
 No requiere instalación. Solo necesitas un navegador moderno (Chrome, Firefox, Edge o Safari) con soporte para WebGL.
@@ -30,7 +35,11 @@ Para ejecutar el juego localmente:
 2. Ábrelo en tu navegador de preferencia.
 3. Haz clic en cualquier tecla para iniciar la música y el sistema de combate.
 
+
+
 ## Hoja de ruta (Próximas mejoras)
 - Implementación de diferentes tipos de armas.
 - Generación procedimental de laberintos.
 - Tabla de puntuaciones máximas (High Scores).
+
+Atte Eduardo Fierro Duque 
