@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ghost Cat - Neon Protocol Fixed</title>
+    <title>Ghost Cat - Neon FPS Fixed Physics</title>
     <style>
         body { margin: 0; background-color: #000; color: #0ff; font-family: 'Courier New', monospace; overflow: hidden; touch-action: none; }
-        #game-container { position: relative; width: 100vw; height: 100vh; background-color: #000; }
+        #game-container { position: relative; width: 100vw; height: 100vh; background-color: #000; cursor: crosshair; }
         canvas { width: 100%; height: 100%; display: block; }
         
         #ui-overlay { position: absolute; top: 10px; left: 10px; z-index: 10; width: 95%; pointer-events: none; }
@@ -16,25 +16,36 @@
         #health-bar { width: 100%; height: 100%; background: #0ff; transition: width 0.2s; }
         
         #crosshair { 
-            position: absolute; top: 50%; left: 50%; width: 24px; height: 24px; 
+            position: absolute; top: 50%; left: 50%; width: 20px; height: 20px; 
             border: 2px solid #0ff; border-radius: 50%; transform: translate(-50%, -50%); 
-            pointer-events: none; z-index: 100; opacity: 0.7;
+            pointer-events: none; z-index: 100; opacity: 0.8;
+        }
+        #crosshair::after {
+            content: ''; position: absolute; top: 50%; left: 50%; width: 4px; height: 4px;
+            background: #0ff; border-radius: 50%; transform: translate(-50%, -50%);
         }
 
         #blood-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 255, 255, 0.3); display: none; pointer-events: none; z-index: 15; }
         
-        .mobile-controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; z-index: 10; }
-        .btn { width: 70px; height: 70px; background: rgba(0, 255, 255, 0.1); border: 1px solid #0ff; border-radius: 50%; color: #0ff; display: flex; justify-content: center; align-items: center; font-size: 24px; }
-        #attack-btn { position: absolute; bottom: 30px; right: 30px; width: 90px; height: 90px; background: rgba(0, 255, 255, 0.2); border: 2px solid #0ff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; z-index: 10; color: #0ff; box-shadow: 0 0 15px #0ff; }
+        #instructions {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8); padding: 20px; border: 2px solid #0ff;
+            text-align: center; z-index: 200; color: #0ff;
+        }
+
+        #weapon { position: absolute; bottom: -10px; right: 15%; font-size: 100px; pointer-events: none; transform: rotateY(180deg); z-index: 5; filter: drop-shadow(0 0 10px #0ff); transition: transform 0.1s; }
         
-        #weapon { position: absolute; bottom: -10px; right: 15%; font-size: 100px; pointer-events: none; transform: rotateY(180deg); z-index: 5; filter: drop-shadow(0 0 10px #0ff); }
-        
-        @media (min-width: 800px) { .mobile-controls { display: none; } }
+        @media (min-width: 800px) { .mobile-controls, #attack-btn { display: none; } }
     </style>
 </head>
 <body>
 
 <div id="game-container">
+    <div id="instructions">
+        <h2>GHOST CAT: NEON FPS</h2>
+        <p>CLIC PARA EMPEZAR</p>
+        <p>(W,A,S,D: Mover | ESPACIO: Saltar | CLIC: Disparar)</p>
+    </div>
     <div id="crosshair"></div>
     <div id="blood-overlay"></div>
     
@@ -50,12 +61,6 @@
     <audio id="bgMusic" loop>
         <source src="https://www.chosic.com/wp-content/uploads/2021/07/The-Dark-Piano.mp3" type="audio/mpeg">
     </audio>
-
-    <div class="mobile-controls">
-        <div></div><div class="btn" id="up">↑</div><div></div>
-        <div class="btn" id="left">←</div><div class="btn" id="down">↓</div><div class="btn" id="right">→</div>
-    </div>
-    <div id="attack-btn">PUM!</div>
 </div>
 
 <script type="module">
@@ -65,11 +70,17 @@
     let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
     let ghosts = [], walls = [], bullets = [], explosions = [];
     let playerHealth = 100, kills = 0, timeLeft = 60, currentLevel = 1;
-    let lastDamageTime = 0, gameActive = true, isInvulnerable = false;
+    let gameActive = true, isInvulnerable = false;
     let texNormal, texAngry, texHappy;
 
+    // --- PARÁMETROS DE FÍSICA MEJORADOS ---
+    let verticalVelocity = 0;
+    let isJumping = false;
+    const GRAVITY = 0.015;
+    const JUMP_FORCE = 0.35;
+    const PLAYER_HEIGHT = 2;
+    const PLAYER_RADIUS = 0.8; // Tamaño físico del jugador para colisiones
     const UNIT_SIZE = 5;
-    const COLLISION_MARGIN = 1.2; // Evita que la cámara toque las paredes
 
     const map1 = [
         [1,1,1,1,1,1,1,1,1,1], [1,0,0,0,1,0,0,0,0,1], [1,0,1,0,0,0,1,1,0,1],
@@ -94,8 +105,6 @@
         ctx.fillStyle = bgColor; ctx.fillRect(0, 0, 128, 128);
         ctx.strokeStyle = gridColor; ctx.lineWidth = 2;
         ctx.strokeRect(0,0,128,128);
-        ctx.beginPath(); ctx.moveTo(0,64); ctx.lineTo(128,64); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(64,0); ctx.lineTo(64,128); ctx.stroke();
         return new THREE.CanvasTexture(canvas);
     }
 
@@ -117,7 +126,9 @@
     function init() {
         scene = new THREE.Scene();
         scene.fog = new THREE.FogExp2(0x000000, 0.15);
-        camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.4, 1000); // Near plane ajustado
+        
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        camera.rotation.order = 'YXZ'; 
         
         renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('mazeCanvas'), antialias: false });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -161,9 +172,118 @@
                 }
             }
         }
-        camera.position.set(UNIT_SIZE, 2, UNIT_SIZE);
+        camera.position.set(UNIT_SIZE, PLAYER_HEIGHT, UNIT_SIZE);
         for (let i = 0; i < (num === 1 ? 7 : 12); i++) spawnGhost();
         timeLeft = 60;
+    }
+
+    // --- MEJORA DE COLISIÓN AABB ---
+    function checkCollision(px, pz) {
+        const wallRadius = UNIT_SIZE / 2;
+        for (let i = 0; i < walls.length; i++) {
+            const w = walls[i];
+            // Calculamos los límites de la caja de la pared
+            const minX = w.position.x - wallRadius - PLAYER_RADIUS;
+            const maxX = w.position.x + wallRadius + PLAYER_RADIUS;
+            const minZ = w.position.z - wallRadius - PLAYER_RADIUS;
+            const maxZ = w.position.z + wallRadius + PLAYER_RADIUS;
+
+            if (px > minX && px < maxX && pz > minZ && pz < maxZ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function animate() {
+        if (!gameActive) return;
+        requestAnimationFrame(animate);
+
+        // --- MOVIMIENTO CON DESLIZAMIENTO ---
+        const speed = 0.15;
+        const moveDir = new THREE.Vector3();
+        const front = new THREE.Vector3();
+        const side = new THREE.Vector3();
+
+        camera.getWorldDirection(front);
+        front.y = 0; front.normalize();
+        side.crossVectors(front, new THREE.Vector3(0, 1, 0)).normalize();
+
+        if (moveForward) moveDir.add(front);
+        if (moveBackward) moveDir.sub(front);
+        if (moveLeft) moveDir.add(side);
+        if (moveRight) moveDir.sub(side);
+
+        if (moveDir.length() > 0) {
+            moveDir.normalize().multiplyScalar(speed);
+            
+            // Probar eje X por separado para permitir deslizamiento
+            const nextX = camera.position.x + moveDir.x;
+            if (!checkCollision(nextX, camera.position.z)) {
+                camera.position.x = nextX;
+            }
+            
+            // Probar eje Z por separado
+            const nextZ = camera.position.z + moveDir.z;
+            if (!checkCollision(camera.position.x, nextZ)) {
+                camera.position.z = nextZ;
+            }
+        }
+
+        // Salto
+        if (isJumping) {
+            verticalVelocity -= GRAVITY;
+            camera.position.y += verticalVelocity;
+            if (camera.position.y <= PLAYER_HEIGHT) {
+                camera.position.y = PLAYER_HEIGHT;
+                isJumping = false;
+                verticalVelocity = 0;
+            }
+        }
+
+        // Balas
+        for (let i = bullets.length - 1; i >= 0; i--) {
+            const b = bullets[i];
+            b.mesh.position.add(b.dir.clone().multiplyScalar(0.8));
+            b.life--;
+            let hit = false;
+            ghosts.forEach((g, idx) => {
+                if (b.mesh.position.distanceTo(g.position) < 1.5) {
+                    g.userData.health--;
+                    if (g.userData.health <= 0) {
+                        createExplosion(g.position, g.userData.type === 'happy' ? 0xffff00 : 0x00ffff);
+                        scene.remove(g); ghosts.splice(idx, 1);
+                        kills++; spawnGhost();
+                        document.getElementById('kills-count').innerText = kills;
+                    }
+                    hit = true;
+                }
+            });
+            // Las balas usan una colisión más simple
+            if (hit || b.life <= 0 || checkCollision(b.mesh.position.x, b.mesh.position.z)) {
+                scene.remove(b.mesh); bullets.splice(i, 1);
+            }
+        }
+
+        // Explosiones y Enemigos
+        explosions.forEach((e, i) => {
+            e.mesh.position.add(e.vel); e.life -= 0.04;
+            e.mesh.material.opacity = e.life;
+            if(e.life <= 0) { scene.remove(e.mesh); explosions.splice(i,1); }
+        });
+
+        ghosts.forEach(g => {
+            const d = g.position.distanceTo(camera.position);
+            g.lookAt(camera.position);
+            if (d < 18) {
+                const f = new THREE.Vector3().subVectors(camera.position, g.position).normalize();
+                g.position.x += f.x * g.userData.speed; g.position.z += f.z * g.userData.speed;
+                g.position.y = (g.userData.type === 'happy' ? 1 : 1.2) + Math.sin(Date.now()*0.005)*0.2;
+            }
+            if (d < 1.5) takeDamage();
+        });
+
+        renderer.render(scene, camera);
     }
 
     function spawnGhost() {
@@ -186,84 +306,8 @@
         isInvulnerable = true;
         document.getElementById('blood-overlay').style.display = 'block';
         document.getElementById('health-bar').style.width = playerHealth + "%";
-        
-        setTimeout(() => { 
-            document.getElementById('blood-overlay').style.display = 'none';
-            isInvulnerable = false;
-        }, 500);
-
-        if (playerHealth <= 0) {
-            gameActive = false;
-            alert("SISTEMA COLAPSADO - REINICIANDO...");
-            location.reload();
-        }
-    }
-
-    function animate() {
-        if (!gameActive) return;
-        requestAnimationFrame(animate);
-
-        const speed = 0.2, rotSpeed = 0.05;
-        if (moveLeft) camera.rotation.y += rotSpeed;
-        if (moveRight) camera.rotation.y -= rotSpeed;
-        if (moveForward || moveBackward) {
-            const dir = new THREE.Vector3(); camera.getWorldDirection(dir);
-            const m = moveForward ? 1 : -1;
-            const nX = camera.position.x + dir.x * speed * m;
-            const nZ = camera.position.z + dir.z * speed * m;
-            if (!checkCol(nX, camera.position.z)) camera.position.x = nX;
-            if (!checkCol(camera.position.x, nZ)) camera.position.z = nZ;
-        }
-
-        // Balas
-        for (let i = bullets.length - 1; i >= 0; i--) {
-            const b = bullets[i];
-            b.mesh.position.add(b.dir.clone().multiplyScalar(0.8));
-            b.life--;
-            let hit = false;
-            ghosts.forEach((g, idx) => {
-                if (b.mesh.position.distanceTo(g.position) < 1.5) {
-                    g.userData.health--;
-                    if (g.userData.health <= 0) {
-                        createExplosion(g.position, g.userData.type === 'happy' ? 0xffff00 : 0x00ffff);
-                        scene.remove(g); ghosts.splice(idx, 1);
-                        kills++; spawnGhost();
-                        document.getElementById('kills-count').innerText = kills;
-                    }
-                    hit = true;
-                }
-            });
-            if (hit || b.life <= 0 || checkCol(b.mesh.position.x, b.mesh.position.z)) {
-                scene.remove(b.mesh); bullets.splice(i, 1);
-            }
-        }
-
-        // Enemigos y Explosiones
-        explosions.forEach((e, i) => {
-            e.mesh.position.add(e.vel); e.life -= 0.04;
-            e.mesh.material.opacity = e.life;
-            if(e.life <= 0) { scene.remove(e.mesh); explosions.splice(i,1); }
-        });
-
-        ghosts.forEach(g => {
-            const d = g.position.distanceTo(camera.position);
-            g.lookAt(camera.position);
-            if (d < 18) {
-                const f = new THREE.Vector3().subVectors(camera.position, g.position).normalize();
-                g.position.x += f.x * g.userData.speed; g.position.z += f.z * g.userData.speed;
-                g.position.y = (g.userData.type === 'happy' ? 1 : 1.2) + Math.sin(Date.now()*0.005)*0.2;
-            }
-            if (d < 2.0) takeDamage();
-        });
-
-        renderer.render(scene, camera);
-    }
-
-    function checkCol(x, z) {
-        for(let w of walls) {
-            if (Math.abs(x - w.position.x) < COLLISION_MARGIN + 2 && Math.abs(z - w.position.z) < COLLISION_MARGIN + 2) return true;
-        }
-        return false;
+        setTimeout(() => { document.getElementById('blood-overlay').style.display = 'none'; isInvulnerable = false; }, 500);
+        if (playerHealth <= 0) { gameActive = false; alert("SISTEMA COLAPSADO"); location.reload(); }
     }
 
     function createExplosion(pos, col) {
@@ -278,44 +322,59 @@
     }
 
     function createBullet() {
-        const b = new THREE.Mesh(new THREE.SphereGeometry(0.2), new THREE.MeshBasicMaterial({color: 0x00ff00}));
+        const b = new THREE.Mesh(new THREE.SphereGeometry(0.12), new THREE.MeshBasicMaterial({color: 0x00ff00}));
         b.position.copy(camera.position);
+        b.position.y -= 0.3;
         const dir = new THREE.Vector3(); camera.getWorldDirection(dir);
         b.add(new THREE.PointLight(0x00ff00, 2, 8));
         scene.add(b); bullets.push({ mesh: b, dir: dir, life: 60 });
         const w = document.getElementById('weapon');
-        w.style.transform = "rotateY(180deg) scale(0.7) translateY(10px)";
-        setTimeout(() => w.style.transform = "rotateY(180deg) scale(1)", 60);
+        w.style.transform = "rotateY(180deg) scale(0.8) translateZ(20px)";
+        setTimeout(() => w.style.transform = "rotateY(180deg) scale(1)", 80);
     }
 
     function setupControls() {
         const music = document.getElementById('bgMusic');
-        const playMusic = () => music.play().catch(()=>{});
+        const container = document.getElementById('game-container');
+        const inst = document.getElementById('instructions');
+
+        container.addEventListener('click', () => {
+            if (gameActive) {
+                container.requestPointerLock();
+                music.play().catch(()=>{});
+                inst.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (document.pointerLockElement === container) {
+                camera.rotation.y -= e.movementX * 0.0025;
+                camera.rotation.x -= e.movementY * 0.0025;
+                camera.rotation.x = Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, camera.rotation.x));
+            }
+        });
+
+        document.addEventListener('mousedown', () => {
+            if (document.pointerLockElement === container && gameActive) createBullet();
+        });
+
         window.onkeydown = (e) => {
-            playMusic();
             if(e.code === 'KeyW' || e.code === 'ArrowUp') moveForward = true;
             if(e.code === 'KeyS' || e.code === 'ArrowDown') moveBackward = true;
             if(e.code === 'KeyA' || e.code === 'ArrowLeft') moveLeft = true;
             if(e.code === 'KeyD' || e.code === 'ArrowRight') moveRight = true;
-            if(e.code === 'Space') createBullet();
+            if(e.code === 'Space' && !isJumping) { isJumping = true; verticalVelocity = JUMP_FORCE; }
         };
+
         window.onkeyup = (e) => {
             if(e.code === 'KeyW' || e.code === 'ArrowUp') moveForward = false;
             if(e.code === 'KeyS' || e.code === 'ArrowDown') moveBackward = false;
             if(e.code === 'KeyA' || e.code === 'ArrowLeft') moveLeft = false;
             if(e.code === 'KeyD' || e.code === 'ArrowRight') moveRight = false;
         };
-        const bind = (id, fn) => {
-            const el = document.getElementById(id);
-            el.ontouchstart = (e) => { e.preventDefault(); playMusic(); fn(true); };
-            el.ontouchend = (e) => { e.preventDefault(); fn(false); };
-        };
-        bind('up', v => moveForward = v); bind('down', v => moveBackward = v);
-        bind('left', v => moveLeft = v); bind('right', v => moveRight = v);
-        document.getElementById('attack-btn').ontouchstart = (e) => { e.preventDefault(); createBullet(); };
-        
+
         setInterval(() => { 
-            if (gameActive) {
+            if (gameActive && document.pointerLockElement === container) {
                 timeLeft--; document.getElementById('timer').innerText = timeLeft;
                 if(timeLeft <= 0) {
                     if(currentLevel === 1) { alert("¡ETAPA 1 COMPLETADA!"); loadLevel(2); } 
@@ -324,6 +383,7 @@
             }
         }, 1000);
     }
+
     window.onload = init;
 </script>
 </body>
