@@ -34,12 +34,18 @@ Disparar: Clic Izquierdo del mouse.
 
 Controles Móviles (⚠️ En Desarrollo):
 Actualmente el juego cuenta con un HUD táctil, pero la experiencia FPS con ratón no ha sido optimizada para dispositivos móviles aún. ¡Se recomienda jugar en PC para la mejor experiencia!
-    ![Uploading Ghost Cat - Neon Protocol_by_eduardofierroduque2.gif…]()
+    <img width="853" height="480" alt="Ghost Cat - Neon Protocol_by_eduardofierroduque2" src="https://github.com/user-attachments/assets/bec6623d-242b-43bd-87b5-2d704cd91cff" />
+    
 
 
 
 ## Requisitos
 No requiere instalación. Solo necesitas un navegador moderno (Chrome, Firefox, Edge o Safari) con soporte para WebGL.
+
+<img width="853" height="480" alt="Ghost Cat - Neon Protocol_by_eduardofierroduque3" src="https://github.com/user-attachments/assets/efe62483-8691-426f-8741-274e62ee5c52" />
+
+
+
 
 ## Instrucciones de implementación
 Para ejecutar el juego localmente:
