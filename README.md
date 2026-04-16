@@ -1,4 +1,6 @@
 Ghost Cat - Neon Protocol
+jugar aquí: https://eduardofierroduque-sudo.github.io/Ghost-Cat---Neon-Protocol/
+Controles (flechas dirección barra espacio disparo)
 
 
 Ghost Cat es un shooter de supervivencia en primera persona (FPS) con una estética Cyberpunk/Retro-Neon, desarrollado íntegramente para ejecutarse en el navegador.
@@ -24,7 +26,7 @@ No requiere instalación. Solo necesitas un navegador moderno (Chrome, Firefox, 
 
 ## Instrucciones de implementación
 Para ejecutar el juego localmente:
-1. Descarga el archivo `index.html`.
+1. Descarga el archivo `index.html`. o bien visita la pagina que me da github: https://eduardofierroduque-sudo.github.io/Ghost-Cat---Neon-Protocol/
 2. Ábrelo en tu navegador de preferencia.
 3. Haz clic en cualquier tecla para iniciar la música y el sistema de combate.
 
