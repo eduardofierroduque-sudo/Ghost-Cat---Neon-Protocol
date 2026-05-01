@@ -59,7 +59,7 @@
     <div id="weapon">🔫</div>
 
     <audio id="bgMusic" loop>
-        <source src="https://www.chosic.com/wp-content/uploads/2021/07/The-Dark-Piano.mp3" type="audio/mpeg">
+        <source src="https://freesound.org/people/Elenalostale/sounds/648654/" type="audio/mpeg">
     </audio>
 </div>
 
@@ -211,8 +211,8 @@
 
         if (moveForward) moveDir.add(front);
         if (moveBackward) moveDir.sub(front);
-        if (moveLeft) moveDir.add(side);
-        if (moveRight) moveDir.sub(side);
+        if (moveLeft) moveDir.sub(side);
+        if (moveRight) moveDir.add(side);
 
         if (moveDir.length() > 0) {
             moveDir.normalize().multiplyScalar(speed);
