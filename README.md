@@ -1,4 +1,6 @@
 # Ghost Cubes — Retro Neon FPS v2.0
+<img width="1920" height="1080" alt="cover-landscape" src="https://github.com/user-attachments/assets/548fa315-12af-4540-8f32-5fa2a159e611" />
+
 
 > **Play online:** [https://eduardofierroduque-sudo.github.io/ghost-cubes/](https://eduardofierroduque-sudo.github.io/ghost-cubes/)
 
@@ -13,6 +15,7 @@ A cyberpunk-horror first-person shooter built with Three.js. Hunt ghost cubes ac
 | **Weapon Arsenal** | [Open →](https://eduardofierroduque-sudo.github.io/ghost-cubes/catalogo-armas.html) | 3D weapon catalog with stats for all 7 weapons |
 
 ---
+<img width="800" height="800" alt="cover-square" src="https://github.com/user-attachments/assets/d29c197c-3a8d-47b2-a960-80bad4261ca7" />
 
 ## Table of Contents
 
@@ -302,3 +305,5 @@ The original **Ghost Cat — Neon Protocol v1.0** prototype is preserved in the 
 ---
 
 *Ghost Cubes — Retro FPS. Kill ghosts. Survive. Repeat.*
+<img width="800" height="1200" alt="cover-portrait" src="https://github.com/user-attachments/assets/6b96caa3-eaf6-4edd-b33f-bac15ee2699f" />
+
